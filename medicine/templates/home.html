@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>DrugSafe</title>
+</head>
+
+<body>
+
+    <h1>DrugSafe</h1>
+    <h2>Drug-Drug Interaction Prediction</h2>
+
+    <form method="POST">
+        {% csrf_token %}
+
+        <label>Enter Drug A:</label>
+        <input type="text" name="drug_a" required>
+
+        <br><br>
+
+        <label>Enter Drug B:</label>
+        <input type="text" name="drug_b" required>
+
+        <br><br>
+
+        <button type="submit">Check Interaction</button>
+    </form>
+
+    {% if result %}
+
+        <hr>
+
+        <h2>Prediction Result</h2>
+
+        <p>
+            <b>Drug A:</b> {{ drug_a }}
+        </p>
+
+        <p>
+            <b>Drug B:</b> {{ drug_b }}
+        </p>
+
+        <p>
+            <b>Risk Level:</b> {{ result }}
+        </p>
+
+    {% endif %}
+
+</body>
+</html>

@@ -1,0 +1,448 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta name="viewport"
+          content="width=device-width, initial-scale=1.0">
+
+    <title>DrugSafe - Drug Interaction Checker</title>
+
+    <style>
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            font-family: Arial, sans-serif;
+            background: #f4f7fb;
+            color: #222;
+        }
+
+        .header {
+            background: #1565c0;
+            color: white;
+            padding: 20px 50px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            font-size: 28px;
+            font-weight: bold;
+        }
+        .header-right {
+            display: flex;
+            align-items: center;
+            gap: 25px;
+        }
+        .auth-buttons {
+            display: flex;
+            gap: 10px;
+        }
+        .auth-buttons a {
+            text-decoration: none;
+            padding: 9px 16px;
+            border-radius: 6px;
+            font-size: 14px;
+            font-weight: bold;
+        }
+        .login-btn {
+            background: white;
+            color: #1565c0;
+        }
+        .register-btn {
+            background: #0d47a1;
+            color: white;
+        }
+
+        .tagline {
+            font-size: 14px;
+        }
+
+        .container {
+            width: 90%;
+            max-width: 1000px;
+            margin: 40px auto;
+        }
+
+        .card {
+            background: white;
+            padding: 35px;
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.08);
+        }
+
+        .title {
+            text-align: center;
+            margin-bottom: 10px;
+            color: #1565c0;
+        }
+
+        .description {
+            text-align: center;
+            color: #666;
+            margin-bottom: 30px;
+        }
+
+        .form-row {
+            display: flex;
+            gap: 20px;
+        }
+
+        .form-group {
+            flex: 1;
+        }
+
+        label {
+            display: block;
+            font-weight: bold;
+            margin-bottom: 8px;
+        }
+
+        input {
+            width: 100%;
+            padding: 13px;
+            border: 1px solid #ccc;
+            border-radius: 6px;
+            font-size: 16px;
+        }
+
+        input:focus {
+            outline: none;
+            border-color: #1565c0;
+        }
+
+        .button-container {
+            text-align: center;
+            margin-top: 25px;
+        }
+
+        button {
+            background: #1565c0;
+            color: white;
+            border: none;
+            padding: 13px 30px;
+            border-radius: 6px;
+            font-size: 16px;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background: #0d47a1;
+        }
+
+        .error {
+            margin-top: 25px;
+            padding: 15px;
+            background: #ffebee;
+            color: #c62828;
+            border-radius: 6px;
+            text-align: center;
+        }
+
+        .result {
+            margin-top: 35px;
+        }
+
+        .risk {
+            text-align: center;
+            padding: 20px;
+            background: #fff3cd;
+            border-radius: 8px;
+            margin-bottom: 25px;
+        }
+
+        .risk h2 {
+            margin: 5px 0;
+        }
+
+        .effects-container {
+            display: flex;
+            gap: 20px;
+        }
+
+        .effects-box {
+            flex: 1;
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 8px;
+            border: 1px solid #ddd;
+        }
+
+        .effects-box h3 {
+            color: #1565c0;
+            margin-top: 0;
+        }
+
+        .effects-box li {
+            margin-bottom: 8px;
+        }
+
+        .footer {
+            text-align: center;
+            padding: 20px;
+            color: #777;
+            font-size: 13px;
+        }
+
+        @media (max-width: 700px) {
+
+            .form-row,
+            .effects-container {
+                flex-direction: column;
+            }
+
+            .header {
+                padding: 20px;
+            }
+
+            .container {
+                width: 95%;
+            }
+
+        }
+
+    </style>
+
+</head>
+
+
+<body>
+
+
+<!-- ========================= -->
+<!-- HEADER -->
+<!-- ========================= -->
+
+<div class="header">
+
+    <div class="logo">
+        DrugSafe
+    </div>
+
+    <div class="header-right">
+
+        <div class="tagline">
+            Drug-Drug Interaction Prediction
+        </div>
+
+        <div class="auth-buttons">
+
+            <a href="{% url 'login' %}" class="login-btn">
+                Login
+            </a>
+
+            <a href="{% url 'register' %}" class="register-btn">
+                Register
+            </a>
+
+        </div>
+
+    </div>
+
+</div>
+
+
+<!-- ========================= -->
+<!-- MAIN CONTENT -->
+<!-- ========================= -->
+
+<div class="container">
+
+    <div class="card">
+
+        <h1 class="title">
+            Drug Interaction Checker
+        </h1>
+
+        <p class="description">
+            Enter two medicinal drugs to predict their interaction risk
+            and view available side-effect information.
+        </p>
+
+
+        <!-- ========================= -->
+        <!-- INPUT FORM -->
+        <!-- ========================= -->
+
+        <form method="POST"
+              action="{% url 'predict' %}">
+
+            {% csrf_token %}
+
+            <div class="form-row">
+
+
+                <!-- Drug A -->
+
+                <div class="form-group">
+
+                    <label for="drug_a">
+                        Drug A
+                    </label>
+
+                    <input
+                        type="text"
+                        id="drug_a"
+                        name="drug_a"
+                        placeholder="Enter first drug"
+                        value="{{ drug_a|default:'' }}"
+                        required
+                    >
+
+                </div>
+
+
+                <!-- Drug B -->
+
+                <div class="form-group">
+
+                    <label for="drug_b">
+                        Drug B
+                    </label>
+
+                    <input
+                        type="text"
+                        id="drug_b"
+                        name="drug_b"
+                        placeholder="Enter second drug"
+                        value="{{ drug_b|default:'' }}"
+                        required
+                    >
+
+                </div>
+
+            </div>
+
+
+            <div class="button-container">
+
+                <button type="submit">
+                    Check Interaction
+                </button>
+
+            </div>
+
+        </form>
+
+
+        <!-- ========================= -->
+        <!-- ERROR MESSAGE -->
+        <!-- ========================= -->
+
+        {% if error %}
+
+            <div class="error">
+
+                {{ error }}
+
+            </div>
+
+        {% endif %}
+
+
+        <!-- ========================= -->
+        <!-- RESULT -->
+        <!-- ========================= -->
+
+        {% if risk_level %}
+
+            <div class="result">
+
+                <div class="risk">
+
+                    <p>
+                        Interaction Result
+                    </p>
+
+                    <h2>
+                        {{ risk_level }}
+                    </h2>
+
+                </div>
+
+
+                <!-- ========================= -->
+                <!-- SIDE EFFECTS -->
+                <!-- ========================= -->
+
+                <div class="effects-container">
+
+
+                    <!-- Drug A Side Effects -->
+
+                    <div class="effects-box">
+
+                        <h3>
+                            {{ drug_a }} - Side Effects
+                        </h3>
+
+                        <ul>
+
+                            {% for effect in drug_a_effects %}
+
+                                <li>
+                                    {{ effect }}
+                                </li>
+
+                            {% endfor %}
+
+                        </ul>
+
+                    </div>
+
+
+                    <!-- Drug B Side Effects -->
+
+                    <div class="effects-box">
+
+                        <h3>
+                            {{ drug_b }} - Side Effects
+                        </h3>
+
+                        <ul>
+
+                            {% for effect in drug_b_effects %}
+
+                                <li>
+                                    {{ effect }}
+                                </li>
+
+                            {% endfor %}
+
+                        </ul>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        {% endif %}
+
+    </div>
+
+</div>
+
+
+<!-- ========================= -->
+<!-- FOOTER -->
+<!-- ========================= -->
+
+<div class="footer">
+
+    DrugSafe &copy; 2026 |
+    Medicinal Drug Interaction Decision Support
+
+</div>
+
+
+</body>
+
+</html>
