@@ -1,0 +1,505 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>DrugSafe | AI Drug Interaction Prediction</title>
+
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: Arial, Helvetica, sans-serif;
+            background: #f7fafd;
+            color: #1e293b;
+        }
+
+        /* ================= HEADER ================= */
+
+        .header {
+            height: 72px;
+            background: #123c69;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 7%;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            color: white;
+            text-decoration: none;
+        }
+
+        .logo-icon {
+            width: 38px;
+            height: 38px;
+            border-radius: 10px;
+            background: white;
+            color: #123c69;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 21px;
+            font-weight: bold;
+        }
+
+        .logo-text {
+            font-size: 23px;
+            font-weight: 700;
+            letter-spacing: 0.3px;
+        }
+
+        .nav-links {
+            display: flex;
+            align-items: center;
+            gap: 28px;
+        }
+
+        .nav-links a {
+            color: white;
+            text-decoration: none;
+            font-size: 14px;
+            font-weight: 500;
+            transition: color 0.2s ease;
+        }
+
+        .nav-links a:hover {
+            color: #c9e6ff;
+        }
+
+        /* ================= HERO ================= */
+
+        .hero {
+            min-height: calc(100vh - 72px);
+            display: flex;
+            align-items: center;
+            padding: 70px 7%;
+            background:
+                linear-gradient(
+                    120deg,
+                    #f7fafd 0%,
+                    #eef6fc 55%,
+                    #e5f1fa 100%
+                );
+        }
+
+        .hero-content {
+            width: 55%;
+            max-width: 720px;
+        }
+
+        .hero-label {
+            display: inline-block;
+            background: #e1effb;
+            color: #1769aa;
+            padding: 8px 15px;
+            border-radius: 20px;
+            font-size: 13px;
+            font-weight: 600;
+            margin-bottom: 22px;
+        }
+
+        .hero h1 {
+            font-size: 52px;
+            line-height: 1.12;
+            color: #123c69;
+            margin-bottom: 20px;
+            font-weight: 700;
+        }
+
+        .hero h1 span {
+            color: #1683c7;
+        }
+
+        .hero-description {
+            font-size: 18px;
+            line-height: 1.7;
+            color: #52657a;
+            max-width: 650px;
+            margin-bottom: 30px;
+        }
+
+        .hero-buttons {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .primary-btn {
+            display: inline-block;
+            background: #1769aa;
+            color: white;
+            text-decoration: none;
+            padding: 13px 25px;
+            border-radius: 7px;
+            font-size: 15px;
+            font-weight: 600;
+            transition: background 0.2s ease;
+        }
+
+        .primary-btn:hover {
+            background: #12588f;
+        }
+
+        .secondary-btn {
+            display: inline-block;
+            color: #1769aa;
+            text-decoration: none;
+            padding: 13px 10px;
+            font-size: 15px;
+            font-weight: 600;
+        }
+
+        /* ================= HERO VISUAL ================= */
+
+        .hero-visual {
+            width: 45%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .medical-card {
+            width: 390px;
+            background: white;
+            border-radius: 18px;
+            padding: 30px;
+            box-shadow: 0 18px 45px rgba(18, 60, 105, 0.13);
+            border: 1px solid #e2edf5;
+        }
+
+        .medical-card-header {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            margin-bottom: 28px;
+        }
+
+        .molecule-icon {
+            width: 52px;
+            height: 52px;
+            border-radius: 14px;
+            background: #e8f4fc;
+            color: #1769aa;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 25px;
+        }
+
+        .medical-card-header h3 {
+            color: #123c69;
+            font-size: 18px;
+            margin-bottom: 5px;
+        }
+
+        .medical-card-header p {
+            color: #8091a3;
+            font-size: 12px;
+        }
+
+        .drug-box {
+            border: 1px solid #dce8f1;
+            border-radius: 9px;
+            padding: 13px 15px;
+            margin-bottom: 12px;
+        }
+
+        .drug-box label {
+            display: block;
+            color: #8292a3;
+            font-size: 11px;
+            margin-bottom: 5px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .drug-box strong {
+            color: #243b53;
+            font-size: 14px;
+        }
+
+        .analysis-line {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 17px 0;
+            color: #1769aa;
+            font-size: 13px;
+            font-weight: 600;
+        }
+
+        .risk-box {
+            background: #f1f8fd;
+            border-radius: 9px;
+            padding: 15px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .risk-box span {
+            color: #63788c;
+            font-size: 12px;
+        }
+
+        .risk-box strong {
+            color: #1769aa;
+            font-size: 14px;
+        }
+
+        /* ================= RESPONSIVE ================= */
+
+        @media (max-width: 900px) {
+
+            .header {
+                padding: 0 5%;
+            }
+
+            .hero {
+                flex-direction: column;
+                text-align: center;
+                padding: 60px 5%;
+            }
+
+            .hero-content {
+                width: 100%;
+            }
+
+            .hero-description {
+                margin-left: auto;
+                margin-right: auto;
+            }
+
+            .hero-buttons {
+                justify-content: center;
+            }
+
+            .hero-visual {
+                width: 100%;
+                margin-top: 45px;
+            }
+        }
+
+        @media (max-width: 650px) {
+
+            .header {
+                height: auto;
+                padding: 18px 5%;
+                flex-direction: column;
+                gap: 15px;
+            }
+
+            .nav-links {
+                gap: 15px;
+                flex-wrap: wrap;
+                justify-content: center;
+            }
+
+            .hero {
+                padding-top: 45px;
+            }
+
+            .hero h1 {
+                font-size: 38px;
+            }
+
+            .hero-description {
+                font-size: 16px;
+            }
+
+            .medical-card {
+                width: 100%;
+                max-width: 390px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <!-- ================= HEADER ================= -->
+
+    <header class="header">
+
+        <a href="{% url 'home_redirect' %}" class="logo">
+
+            <div class="logo-icon">
+                DS
+            </div>
+
+            <div class="logo-text">
+                DrugSafe
+            </div>
+
+        </a>
+
+        <nav class="nav-links">
+
+            <a href="{% url 'home_redirect' %}">
+                Home
+            </a>
+
+            <a href="{% url 'login' %}?next={% url 'predictor_home' %}">
+                Dashboard
+            </a>
+
+            {% if user.is_authenticated %}
+
+                <a href="#">
+                    History
+                </a>
+
+                <a href="#">
+                    Profile
+                </a>
+
+                <a href="{% url 'logout' %}">
+                    Logout
+                </a>
+
+            {% else %}
+
+                <a href="{% url 'login' %}">
+                    Login
+                </a>
+
+                <a href="{% url 'register' %}">
+                    Register
+                </a>
+
+            {% endif %}
+
+        </nav>
+
+    </header>
+
+
+    <!-- ================= HERO SECTION ================= -->
+
+    <main class="hero">
+
+        <section class="hero-content">
+
+            <div class="hero-label">
+                AI-POWERED MEDICATION SAFETY
+            </div>
+
+            <h1>
+                Smarter Insights for
+                <span>Safer Medication</span>
+            </h1>
+
+            <p class="hero-description">
+                DrugSafe is an AI-based drug interaction prediction
+                platform designed to analyze medicinal drug combinations,
+                predict interaction risk levels, and identify associated
+                adverse events.
+            </p>
+
+            <div class="hero-buttons">
+
+                <a
+                    href="{% url 'login' %}?next={% url 'predictor_home' %}"
+                    class="primary-btn"
+                >
+                    Start Prediction
+                </a>
+
+                <a
+                    href="{% url 'register' %}"
+                    class="secondary-btn"
+                >
+                    Create Account →
+                </a>
+
+            </div>
+
+        </section>
+
+
+        <!-- ================= HERO CARD ================= -->
+
+        <section class="hero-visual">
+
+            <div class="medical-card">
+
+                <div class="medical-card-header">
+
+                    <div class="molecule-icon">
+                        ⚕
+                    </div>
+
+                    <div>
+                        <h3>
+                            Drug Interaction Analysis
+                        </h3>
+
+                        <p>
+                            AI-assisted molecular assessment
+                        </p>
+                    </div>
+
+                </div>
+
+
+                <div class="drug-box">
+
+                    <label>
+                        Drug A
+                    </label>
+
+                    <strong>
+                        Medicinal Drug
+                    </strong>
+
+                </div>
+
+
+                <div class="analysis-line">
+                    ↓ &nbsp; Molecular Analysis &nbsp; ↓
+                </div>
+
+
+                <div class="drug-box">
+
+                    <label>
+                        Drug B
+                    </label>
+
+                    <strong>
+                        Medicinal Drug
+                    </strong>
+
+                </div>
+
+
+                <div class="risk-box">
+
+                    <span>
+                        Interaction Assessment
+                    </span>
+
+                    <strong>
+                        AI Prediction
+                    </strong>
+
+                </div>
+
+            </div>
+
+        </section>
+
+    </main>
+
+</body>
+</html>

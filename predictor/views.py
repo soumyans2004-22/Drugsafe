@@ -1,100 +1,155 @@
+from django.contrib.auth.decorators import login_required
 from django.shortcuts import render
 from django.conf import settings
 
-import pandas as pd
+from .models import PredictionHistory
+
+import os
+import requests
+import numpy as np
 import joblib
 import xgboost as xgb
-import os
-import re
+
+from urllib.parse import quote
+from rdkit import Chem
+from rdkit.Chem import AllChem
 
 
-# ==============================
-# FILE PATHS
-# ==============================
-MODEL_PATH = os.path.join(
+# =========================
+# MODEL PATHS
+# =========================
+
+SEVERITY_MODEL_PATH = os.path.join(
     settings.BASE_DIR,
     "drug",
-    "drugsafe_xgboost.json"
+    "drugsafe_molecular_xgboost.json"
 )
 
-DRUG_A_ENCODER_PATH = os.path.join(
+SEVERITY_ENCODER_PATH = os.path.join(
     settings.BASE_DIR,
     "drug",
-    "drug_a_encoder.pkl"
+    "severity_label_encoder.pkl"
 )
 
-DRUG_B_ENCODER_PATH = os.path.join(
+SIDE_EFFECT_MODEL_PATH = os.path.join(
     settings.BASE_DIR,
     "drug",
-    "drug_b_encoder.pkl"
+    "drugsafe_side_effect_model.pkl"
 )
 
-LEVEL_ENCODER_PATH = os.path.join(
+SIDE_EFFECT_NAMES_PATH = os.path.join(
     settings.BASE_DIR,
     "drug",
-    "level_encoder.pkl"
-)
-
-CSV_PATH = os.path.join(
-    settings.BASE_DIR,
-    "drug",
-    "DDInter_SIDER_30000.csv"
+    "new_dataset",
+    "side_effect_names.npy"
 )
 
 
-# ==============================
-# LOAD MODEL
-# ==============================
+# =========================
+# LOAD SEVERITY MODEL
+# =========================
 
-model = xgb.XGBClassifier()
-model.load_model(MODEL_PATH)
+severity_model = xgb.XGBClassifier()
 
-le_drug_a = joblib.load(DRUG_A_ENCODER_PATH)
-le_drug_b = joblib.load(DRUG_B_ENCODER_PATH)
-le_level = joblib.load(LEVEL_ENCODER_PATH)
+severity_model.load_model(
+    SEVERITY_MODEL_PATH
+)
 
-
-# ==============================
-# LOAD DATASET
-# ==============================
-
-df = pd.read_csv(CSV_PATH)
+severity_encoder = joblib.load(
+    SEVERITY_ENCODER_PATH
+)
 
 
-# ==============================
-# SIDE EFFECT FUNCTION
-# ==============================
+# =========================
+# LOAD SIDE EFFECT MODEL
+# =========================
 
-def get_side_effects(text):
+side_effect_model = joblib.load(
+    SIDE_EFFECT_MODEL_PATH
+)
 
-    if pd.isna(text):
-        return []
-
-    effects = re.split(r"[;,|]", str(text))
-
-    effects = [
-        effect.strip()
-        for effect in effects
-        if effect.strip()
-    ]
-
-    # Remove duplicates
-    unique_effects = []
-
-    for effect in effects:
-
-        if effect.lower() not in [
-            x.lower() for x in unique_effects
-        ]:
-            unique_effects.append(effect)
-
-    return unique_effects[:5]
+side_effect_names = np.load(
+    SIDE_EFFECT_NAMES_PATH,
+    allow_pickle=True
+)
 
 
-# ==============================
+# =========================
+# MOLECULAR FINGERPRINT
+# =========================
+
+generator = AllChem.GetMorganGenerator(
+    radius=2,
+    fpSize=128
+)
+
+
+def smiles_to_fingerprint(smiles):
+
+    mol = Chem.MolFromSmiles(smiles)
+
+    if mol is None:
+        return None
+
+    fingerprint = generator.GetFingerprint(
+        mol
+    )
+
+    return np.array(
+        fingerprint,
+        dtype=np.int8
+    )
+
+
+# =========================
+# PUBCHEM SMILES LOOKUP
+# =========================
+
+def get_smiles(drug_name):
+
+    drug_name = drug_name.strip()
+
+    url = (
+        "https://pubchem.ncbi.nlm.nih.gov/rest/pug/"
+        f"compound/name/{quote(drug_name)}/property/"
+        "ConnectivitySMILES/JSON"
+    )
+
+    headers = {
+        "User-Agent": "DrugSafe/1.0"
+    }
+
+    try:
+
+        response = requests.get(
+            url,
+            headers=headers,
+            timeout=15
+        )
+
+        if response.status_code != 200:
+            return None
+
+        data = response.json()
+
+        return data[
+            "PropertyTable"
+        ][
+            "Properties"
+        ][0][
+            "ConnectivitySMILES"
+        ]
+
+    except Exception:
+
+        return None
+
+
+# =========================
 # HOME PAGE
-# ==============================
+# =========================
 
+@login_required
 def home(request):
 
     return render(
@@ -103,202 +158,391 @@ def home(request):
     )
 
 
-# ==============================
+# =========================
 # PREDICTION
-# ==============================
+# =========================
 
+@login_required
 def predict(request):
 
-    if request.method == "POST":
+    if request.method != "POST":
 
-        drug_a_input = request.POST.get(
-            "drug_a", ""
-        ).strip()
+        return render(
+            request,
+            "predictor/home.html"
+        )
 
-        drug_b_input = request.POST.get(
-            "drug_b", ""
-        ).strip()
+    # =========================
+    # GET DRUG NAMES
+    # =========================
 
-        # Check empty input
-        if not drug_a_input or not drug_b_input:
+    drug_a = request.POST.get(
+        "drug_a",
+        ""
+    ).strip()
 
-            return render(
-                request,
-                "predictor/home.html",
-                {
-                    "error": "Please enter both Drug A and Drug B."
-                }
-            )
+    drug_b = request.POST.get(
+        "drug_b",
+        ""
+    ).strip()
 
-        # ==============================
-        # FIND DRUG A
-        # ==============================
 
-        match_a = [
-            x for x in le_drug_a.classes_
-            if drug_a_input.lower() == x.lower()
-        ]
+    # =========================
+    # CHECK INPUT
+    # =========================
 
-        # ==============================
-        # FIND DRUG B
-        # ==============================
-
-        match_b = [
-            x for x in le_drug_b.classes_
-            if drug_b_input.lower() == x.lower()
-        ]
-
-        if not match_a or not match_b:
-
-            return render(
-                request,
-                "predictor/home.html",
-                {
-                    "error": "One or both drugs were not found in the dataset."
-                }
-            )
-
-        drug_a = match_a[0]
-        drug_b = match_b[0]
-
-        # ==============================
-        # ENCODE DRUGS
-        # ==============================
-
-        drug_a_encoded = le_drug_a.transform(
-            [drug_a]
-        )[0]
-
-        drug_b_encoded = le_drug_b.transform(
-            [drug_b]
-        )[0]
-
-        # ==============================
-        # MODEL INPUT
-        # ==============================
-
-        X_new = pd.DataFrame({
-            "Drug_A_encoded": [drug_a_encoded],
-            "Drug_B_encoded": [drug_b_encoded]
-        })
-
-        # ==============================
-        # PREDICT RISK LEVEL
-        # ==============================
-
-        prediction = model.predict(X_new)
-
-        risk_level = le_level.inverse_transform(
-            prediction
-        )[0]
-
-        # ==============================
-        # FIND SIDE EFFECTS
-        # ==============================
-
-        drug_a_effects = []
-        drug_b_effects = []
-
-        pair_rows = df[
-            (
-                (df["Drug_A"].astype(str).str.lower() == drug_a.lower())
-                &
-                (df["Drug_B"].astype(str).str.lower() == drug_b.lower())
-            )
-            |
-            (
-                (df["Drug_A"].astype(str).str.lower() == drug_b.lower())
-                &
-                (df["Drug_B"].astype(str).str.lower() == drug_a.lower())
-            )
-        ]
-
-        for _, row in pair_rows.iterrows():
-
-            csv_drug_a = str(
-                row["Drug_A"]
-            ).lower()
-
-            if csv_drug_a == drug_a.lower():
-
-                drug_a_effects.extend(
-                    get_side_effects(
-                        row["Side_Effect_A"]
-                    )
-                )
-
-                drug_b_effects.extend(
-                    get_side_effects(
-                        row["Side_Effect_B"]
-                    )
-                )
-
-            else:
-
-                drug_a_effects.extend(
-                    get_side_effects(
-                        row["Side_Effect_B"]
-                    )
-                )
-
-                drug_b_effects.extend(
-                    get_side_effects(
-                        row["Side_Effect_A"]
-                    )
-                )
-
-        # ==============================
-        # REMOVE DUPLICATES
-        # ==============================
-
-        drug_a_effects = list(
-            dict.fromkeys(drug_a_effects)
-        )[:5]
-
-        drug_b_effects = list(
-            dict.fromkeys(drug_b_effects)
-        )[:5]
-
-        # ==============================
-        # NO SIDE EFFECT DATA
-        # ==============================
-
-        if not drug_a_effects:
-
-            drug_a_effects = [
-                "No side effect information available"
-            ]
-
-        if not drug_b_effects:
-
-            drug_b_effects = [
-                "No side effect information available"
-            ]
-
-        # ==============================
-        # SEND RESULT TO HTML
-        # ==============================
-
-        context = {
-
-            "drug_a": drug_a,
-
-            "drug_b": drug_b,
-
-            "risk_level": risk_level,
-
-            "drug_a_effects": drug_a_effects,
-
-            "drug_b_effects": drug_b_effects,
-        }
+    if not drug_a or not drug_b:
 
         return render(
             request,
             "predictor/home.html",
-            context
+            {
+                "error":
+                "Please enter both Drug A and Drug B."
+            }
         )
+
+
+    # =========================
+    # GET SMILES FROM PUBCHEM
+    # =========================
+
+    smiles_a = get_smiles(
+        drug_a
+    )
+
+    smiles_b = get_smiles(
+        drug_b
+    )
+
+
+    if not smiles_a:
+
+        return render(
+            request,
+            "predictor/home.html",
+            {
+                "error":
+                f"Could not find '{drug_a}' in PubChem."
+            }
+        )
+
+
+    if not smiles_b:
+
+        return render(
+            request,
+            "predictor/home.html",
+            {
+                "error":
+                f"Could not find '{drug_b}' in PubChem."
+            }
+        )
+
+
+    # =========================
+    # CREATE FINGERPRINTS
+    # =========================
+
+    fingerprint_a = smiles_to_fingerprint(
+        smiles_a
+    )
+
+    fingerprint_b = smiles_to_fingerprint(
+        smiles_b
+    )
+
+
+    if fingerprint_a is None:
+
+        return render(
+            request,
+            "predictor/home.html",
+            {
+                "error":
+                f"Invalid molecular structure for {drug_a}."
+            }
+        )
+
+
+    if fingerprint_b is None:
+
+        return render(
+            request,
+            "predictor/home.html",
+            {
+                "error":
+                f"Invalid molecular structure for {drug_b}."
+            }
+        )
+
+
+    # =========================
+    # COMBINE MOLECULAR FEATURES
+    # =========================
+
+    X_new = np.hstack(
+        [
+            fingerprint_a,
+            fingerprint_b
+        ]
+    ).reshape(
+        1,
+        -1
+    )
+
+
+    # ==================================================
+    # RISK / SEVERITY PREDICTION
+    # ==================================================
+
+    severity_prediction = severity_model.predict(
+        X_new
+    )
+
+    risk_level = severity_encoder.inverse_transform(
+        severity_prediction
+    )[0]
+
+
+    # ==================================================
+    # RISK PROBABILITIES
+    # ==================================================
+
+    probabilities = severity_model.predict_proba(
+        X_new
+    )[0]
+
+
+    # =========================
+    # CONFIDENCE
+    # =========================
+
+    confidence = float(
+        np.max(probabilities) * 100
+    )
+
+
+    # =========================
+    # INDIVIDUAL PROBABILITIES
+    # =========================
+
+    major_probability = float(
+        probabilities[0] * 100
+    )
+
+    minor_probability = float(
+        probabilities[1] * 100
+    )
+
+    moderate_probability = float(
+        probabilities[2] * 100
+    )
+
+
+    # ==================================================
+    # DEBUG INFORMATION
+    # ==================================================
+
+    print("\n==============================")
+    print("DRUGSAFE PREDICTION")
+    print("==============================")
+
+    print(
+        "Drug A:",
+        drug_a
+    )
+
+    print(
+        "Drug B:",
+        drug_b
+    )
+
+    print(
+        "SMILES A:",
+        smiles_a
+    )
+
+    print(
+        "SMILES B:",
+        smiles_b
+    )
+
+    print(
+        "Major:",
+        round(
+            major_probability,
+            2
+        ),
+        "%"
+    )
+
+    print(
+        "Minor:",
+        round(
+            minor_probability,
+            2
+        ),
+        "%"
+    )
+
+    print(
+        "Moderate:",
+        round(
+            moderate_probability,
+            2
+        ),
+        "%"
+    )
+
+    print(
+        "Predicted:",
+        risk_level
+    )
+
+    print(
+        "Confidence:",
+        round(
+            confidence,
+            2
+        ),
+        "%"
+    )
+
+    print("==============================\n")
+
+
+    # ==================================================
+    # SIDE EFFECT PREDICTION
+    # ==================================================
+
+    side_effect_probabilities = (
+        side_effect_model.predict_proba(
+            X_new
+        )
+    )
+
+
+    effect_scores = []
+
+
+    for i, probabilities in enumerate(
+        side_effect_probabilities
+    ):
+
+        probability = float(
+            probabilities[0][1]
+        )
+
+        effect_scores.append(
+            (
+                str(
+                    side_effect_names[i]
+                ),
+                probability
+            )
+        )
+
+
+    # =========================
+    # SORT SIDE EFFECTS
+    # =========================
+
+    effect_scores.sort(
+        key=lambda x: x[1],
+        reverse=True
+    )
+
+
+    # =========================
+    # SELECT TOP 5
+    # =========================
+
+    top_side_effects = [
+        effect[0]
+        for effect in effect_scores[:5]
+    ]
+
+
+    # ==================================================
+    # SAVE PREDICTION HISTORY
+    # ==================================================
+
+    PredictionHistory.objects.create(
+        user=request.user,
+        drug_a=drug_a,
+        drug_b=drug_b,
+        smiles_a=smiles_a,
+        smiles_b=smiles_b,
+        risk_level=risk_level,
+        confidence=confidence,
+        major_probability=major_probability,
+        minor_probability=minor_probability,
+        moderate_probability=moderate_probability,
+        side_effects=", ".join(
+            top_side_effects
+        )
+    )
+
+
+    # ==================================================
+    # RESULT CONTEXT
+    # ==================================================
+
+    context = {
+
+        "drug_a":
+        drug_a,
+
+        "drug_b":
+        drug_b,
+
+        "smiles_a":
+        smiles_a,
+
+        "smiles_b":
+        smiles_b,
+
+        "risk_level":
+        risk_level,
+
+        "confidence":
+        round(
+            confidence,
+            2
+        ),
+
+        # Three severity probabilities
+        "major_probability":
+        round(
+            major_probability,
+            2
+        ),
+
+        "minor_probability":
+        round(
+            minor_probability,
+            2
+        ),
+
+        "moderate_probability":
+        round(
+            moderate_probability,
+            2
+        ),
+
+        # Top 5 associated adverse events
+        "side_effects":
+        top_side_effects
+    }
+
+
+    # =========================
+    # SHOW RESULT
+    # =========================
 
     return render(
         request,
-        "predictor/home.html"
+        "predictor/home.html",
+        context
     )

@@ -82,7 +82,7 @@ def login_view(request):
 
             login(request, user)
 
-            return redirect("home")
+            return redirect("predictor_home")
 
         return render(
             request,
