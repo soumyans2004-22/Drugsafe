@@ -1,0 +1,414 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Prediction History | DrugSafe</title>
+
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: Arial, Helvetica, sans-serif;
+        }
+
+        body {
+            background: #f4f8fc;
+            color: #163b63;
+            min-height: 100vh;
+        }
+
+        /* HEADER */
+        header {
+            height: 92px;
+            background: white;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 6%;
+            box-shadow: 0 2px 12px rgba(0, 60, 120, 0.08);
+        }
+
+        .logo-area {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+        }
+
+        .logo {
+            width: 50px;
+            height: 50px;
+            border-radius: 12px;
+            background: linear-gradient(135deg, #0878d9, #35a7e8);
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            font-weight: bold;
+            box-shadow: 0 5px 15px rgba(0, 120, 220, 0.25);
+        }
+
+        .brand h1 {
+            font-size: 26px;
+            color: #174a7c;
+        }
+
+        .brand p {
+            font-size: 12px;
+            color: #6d8ba8;
+            margin-top: 3px;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 32px;
+            align-items: center;
+        }
+
+        .nav-links a {
+            text-decoration: none;
+            color: #47647f;
+            font-weight: 600;
+            font-size: 16px;
+        }
+
+        .nav-links a:hover,
+        .nav-links .active {
+            color: #0878d9;
+        }
+
+        .logout-link {
+            color: #e64b4b !important;
+        }
+
+        /* MAIN */
+        .container {
+            width: 90%;
+            max-width: 1250px;
+            margin: 55px auto 80px;
+        }
+
+        .page-title {
+            text-align: center;
+            margin-bottom: 35px;
+        }
+
+        .page-title h2 {
+            font-size: 38px;
+            color: #174a7c;
+            margin-bottom: 10px;
+        }
+
+        .page-title p {
+            color: #7088a0;
+            font-size: 17px;
+        }
+
+        /* HISTORY CARD */
+        .history-card {
+            background: white;
+            border-radius: 20px;
+            overflow: hidden;
+            box-shadow: 0 12px 35px rgba(23, 74, 124, 0.10);
+        }
+
+        .table-wrapper {
+            overflow-x: auto;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        thead {
+            background: linear-gradient(135deg, #075b9f, #0878d9);
+            color: white;
+        }
+
+        th {
+            padding: 20px 18px;
+            text-align: left;
+            font-size: 15px;
+            white-space: nowrap;
+        }
+
+        td {
+            padding: 20px 18px;
+            border-bottom: 1px solid #e7eef5;
+            color: #385673;
+            font-size: 15px;
+        }
+
+        tbody tr:hover {
+            background: #f7fbff;
+        }
+
+        .drug-name {
+            color: #174a7c;
+            font-weight: bold;
+        }
+
+        .plus {
+            color: #7c95ad;
+            margin: 0 6px;
+        }
+
+        /* RISK */
+        .risk {
+            display: inline-block;
+            padding: 7px 16px;
+            border-radius: 20px;
+            font-weight: bold;
+            font-size: 13px;
+        }
+
+        .major {
+            background: #ffe2e2;
+            color: #c0392b;
+        }
+
+        .moderate {
+            background: #fff0c7;
+            color: #a15c00;
+        }
+
+        .minor {
+            background: #dff5e7;
+            color: #23824c;
+        }
+
+        .confidence {
+            font-weight: bold;
+            color: #174a7c;
+        }
+
+        .effects {
+            line-height: 1.6;
+        }
+
+        .date {
+            white-space: nowrap;
+            color: #68829b;
+        }
+
+        .empty {
+            text-align: center;
+            padding: 60px 20px;
+            color: #718ba3;
+        }
+
+        /* FOOTER */
+        footer {
+            background: #ffffff;
+            border-top: 1px solid #e2ebf3;
+            text-align: center;
+            padding: 25px;
+            color: #7088a0;
+            font-size: 14px;
+        }
+
+        /* MOBILE */
+        @media (max-width: 800px) {
+
+            header {
+                height: auto;
+                padding: 18px 5%;
+                flex-direction: column;
+                gap: 18px;
+            }
+
+            .nav-links {
+                gap: 18px;
+                flex-wrap: wrap;
+                justify-content: center;
+            }
+
+            .container {
+                width: 94%;
+                margin-top: 35px;
+            }
+
+            .page-title h2 {
+                font-size: 30px;
+            }
+
+            th,
+            td {
+                padding: 15px 12px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+<header>
+
+    <div class="logo-area">
+
+        <div class="logo">
+            DS
+        </div>
+
+        <div class="brand">
+            <h1>DrugSafe</h1>
+            <p>Safer Medications. Smarter Insights.</p>
+        </div>
+
+    </div>
+
+    <nav class="nav-links">
+
+        <a href="{% url 'predictor_home' %}">
+            Home
+        </a>
+
+        <a href="{% url 'history' %}" class="active">
+            History
+        </a>
+
+        <a href="{% url 'profile' %}">
+            Profile
+        </a>
+
+        <a href="{% url 'logout' %}" class="logout-link">
+            Logout
+        </a>
+
+    </nav>
+
+</header>
+
+
+<main class="container">
+
+    <div class="page-title">
+
+        <h2>Prediction History</h2>
+
+        <p>
+            View your previous drug interaction predictions and their results.
+        </p>
+
+    </div>
+
+
+    <div class="history-card">
+
+        {% if predictions %}
+
+        <div class="table-wrapper">
+
+            <table>
+
+                <thead>
+
+                    <tr>
+                        <th>Drug Pair</th>
+                        <th>Risk Level</th>
+                        <th>Confidence</th>
+                        <th>Associated Adverse Events</th>
+                        <th>Date & Time</th>
+                    </tr>
+
+                </thead>
+
+                <tbody>
+
+                    {% for prediction in predictions %}
+
+                    <tr>
+
+                        <td>
+                            <span class="drug-name">
+                                {{ prediction.drug_a }}
+                            </span>
+
+                            <span class="plus">+</span>
+
+                            <span class="drug-name">
+                                {{ prediction.drug_b }}
+                            </span>
+                        </td>
+
+
+                        <td>
+
+                            {% if prediction.risk_level == "Major" %}
+
+                                <span class="risk major">
+                                    Major
+                                </span>
+
+                            {% elif prediction.risk_level == "Moderate" %}
+
+                                <span class="risk moderate">
+                                    Moderate
+                                </span>
+
+                            {% else %}
+
+                                <span class="risk minor">
+                                    Minor
+                                </span>
+
+                            {% endif %}
+
+                        </td>
+
+
+                        <td class="confidence">
+                            {{ prediction.confidence|floatformat:2 }}%
+                        </td>
+
+
+                        <td class="effects">
+                            {{ prediction.side_effects }}
+                        </td>
+
+
+                        <td class="date">
+                            {{ prediction.created_at|date:"d M Y, h:i A" }}
+                        </td>
+
+                    </tr>
+
+                    {% endfor %}
+
+                </tbody>
+
+            </table>
+
+        </div>
+
+        {% else %}
+
+        <div class="empty">
+
+            <h3>No Prediction History</h3>
+
+            <p>
+                Your previous drug interaction predictions will appear here.
+            </p>
+
+        </div>
+
+        {% endif %}
+
+    </div>
+
+</main>
+
+
+<footer>
+
+    DrugSafe © 2026 | AI-powered medicinal drug interaction analysis
+
+</footer>
+
+</body>
+</html>

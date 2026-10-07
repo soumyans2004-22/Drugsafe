@@ -1,5 +1,6 @@
 from django.shortcuts import render, redirect
 from django.contrib.auth import authenticate, login, logout
+from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
 from .models import UserProfile
 
@@ -98,3 +99,17 @@ def logout_view(request):
     logout(request)
 
     return redirect("login")
+
+
+@login_required
+def profile(request):
+
+    profile_data = request.user.profile
+
+    return render(
+        request,
+        "accounts/profile.html",
+        {
+            "profile_data": profile_data
+        }
+    )

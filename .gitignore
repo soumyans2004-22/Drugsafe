@@ -1,10 +1,26 @@
 __pycache__/
 *.pyc
+
 venv/
+venv_new/
+
 .env
 .vscode/
+
 db.sqlite3
 
+# Main dataset
 DDInter_SIDER_30000.csv
+
+# ML model files
 *.pkl
 *.json
+
+# Large training datasets
+train.csv
+new_dataset/extracted/
+
+# Large files inside new_dataset
+new_dataset/*.zip
+new_dataset/*.csv
+new_dataset/*.npy

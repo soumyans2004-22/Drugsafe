@@ -11,37 +11,35 @@ import joblib
 import xgboost as xgb
 
 from urllib.parse import quote
-from rdkit import Chem
-from rdkit.Chem import AllChem
 
 
 # =========================
 # MODEL PATHS
 # =========================
 
-SEVERITY_MODEL_PATH = os.path.join(
+BASE_DIR = os.path.join(
     settings.BASE_DIR,
-    "drug",
-    "drugsafe_molecular_xgboost.json"
+    "drug"
+)
+
+SEVERITY_MODEL_PATH = os.path.join(
+    BASE_DIR,
+    "drugsafe_no_rdkit_xgboost.json"
+)
+
+SEVERITY_VECTORIZER_PATH = os.path.join(
+    BASE_DIR,
+    "smiles_tfidf_vectorizer.pkl"
 )
 
 SEVERITY_ENCODER_PATH = os.path.join(
-    settings.BASE_DIR,
-    "drug",
-    "severity_label_encoder.pkl"
+    BASE_DIR,
+    "severity_no_rdkit_encoder.pkl"
 )
 
 SIDE_EFFECT_MODEL_PATH = os.path.join(
-    settings.BASE_DIR,
-    "drug",
-    "drugsafe_side_effect_model.pkl"
-)
-
-SIDE_EFFECT_NAMES_PATH = os.path.join(
-    settings.BASE_DIR,
-    "drug",
-    "new_dataset",
-    "side_effect_names.npy"
+    BASE_DIR,
+    "drugsafe_no_rdkit_side_effect_model.pkl"
 )
 
 
@@ -55,50 +53,28 @@ severity_model.load_model(
     SEVERITY_MODEL_PATH
 )
 
+severity_vectorizer = joblib.load(
+    SEVERITY_VECTORIZER_PATH
+)
+
 severity_encoder = joblib.load(
     SEVERITY_ENCODER_PATH
 )
 
 
 # =========================
-# LOAD SIDE EFFECT MODEL
+# LOAD ADVERSE-EVENT MODEL
 # =========================
 
-side_effect_model = joblib.load(
+side_effect_artifact = joblib.load(
     SIDE_EFFECT_MODEL_PATH
 )
 
-side_effect_names = np.load(
-    SIDE_EFFECT_NAMES_PATH,
-    allow_pickle=True
-)
+side_effect_model = side_effect_artifact["model"]
 
+side_effect_vectorizer = side_effect_artifact["vectorizer"]
 
-# =========================
-# MOLECULAR FINGERPRINT
-# =========================
-
-generator = AllChem.GetMorganGenerator(
-    radius=2,
-    fpSize=128
-)
-
-
-def smiles_to_fingerprint(smiles):
-
-    mol = Chem.MolFromSmiles(smiles)
-
-    if mol is None:
-        return None
-
-    fingerprint = generator.GetFingerprint(
-        mol
-    )
-
-    return np.array(
-        fingerprint,
-        dtype=np.int8
-    )
+side_effect_names = side_effect_artifact["target_names"]
 
 
 # =========================
@@ -204,7 +180,7 @@ def predict(request):
 
 
     # =========================
-    # GET SMILES FROM PUBCHEM
+    # GET SMILES
     # =========================
 
     smiles_a = get_smiles(
@@ -240,55 +216,14 @@ def predict(request):
         )
 
 
-    # =========================
-    # CREATE FINGERPRINTS
-    # =========================
+    # ==================================================
+    # COMBINED SMILES
+    # ==================================================
 
-    fingerprint_a = smiles_to_fingerprint(
+    combined_smiles = (
         smiles_a
-    )
-
-    fingerprint_b = smiles_to_fingerprint(
-        smiles_b
-    )
-
-
-    if fingerprint_a is None:
-
-        return render(
-            request,
-            "predictor/home.html",
-            {
-                "error":
-                f"Invalid molecular structure for {drug_a}."
-            }
-        )
-
-
-    if fingerprint_b is None:
-
-        return render(
-            request,
-            "predictor/home.html",
-            {
-                "error":
-                f"Invalid molecular structure for {drug_b}."
-            }
-        )
-
-
-    # =========================
-    # COMBINE MOLECULAR FEATURES
-    # =========================
-
-    X_new = np.hstack(
-        [
-            fingerprint_a,
-            fingerprint_b
-        ]
-    ).reshape(
-        1,
-        -1
+        + " "
+        + smiles_b
     )
 
 
@@ -296,8 +231,12 @@ def predict(request):
     # RISK / SEVERITY PREDICTION
     # ==================================================
 
+    X_severity = severity_vectorizer.transform(
+        [combined_smiles]
+    )
+
     severity_prediction = severity_model.predict(
-        X_new
+        X_severity
     )
 
     risk_level = severity_encoder.inverse_transform(
@@ -310,38 +249,112 @@ def predict(request):
     # ==================================================
 
     probabilities = severity_model.predict_proba(
-        X_new
+        X_severity
     )[0]
 
-
-    # =========================
-    # CONFIDENCE
-    # =========================
 
     confidence = float(
         np.max(probabilities) * 100
     )
 
 
-    # =========================
-    # INDIVIDUAL PROBABILITIES
-    # =========================
+    probability_map = dict(
+        zip(
+            severity_encoder.classes_,
+            probabilities
+        )
+    )
+
 
     major_probability = float(
-        probabilities[0] * 100
+        probability_map.get(
+            "Major",
+            0
+        ) * 100
     )
 
     minor_probability = float(
-        probabilities[1] * 100
+        probability_map.get(
+            "Minor",
+            0
+        ) * 100
     )
 
     moderate_probability = float(
-        probabilities[2] * 100
+        probability_map.get(
+            "Moderate",
+            0
+        ) * 100
     )
 
 
     # ==================================================
-    # DEBUG INFORMATION
+    # ADVERSE-EVENT PREDICTION
+    # ==================================================
+
+    X_side_effect = side_effect_vectorizer.transform(
+        [combined_smiles]
+    )
+
+    side_effect_probabilities = []
+
+
+    for estimator in side_effect_model.estimators_:
+
+        probability = estimator.predict_proba(
+            X_side_effect
+        )[0][1]
+
+        side_effect_probabilities.append(
+            probability
+        )
+
+
+    side_effect_probabilities = np.array(
+        side_effect_probabilities
+    )
+
+
+    # ==================================================
+    # TOP 5 ADVERSE EVENTS
+    # ==================================================
+
+    top_indices = np.argsort(
+        side_effect_probabilities
+    )[::-1][:5]
+
+
+    top_side_effects = []
+
+
+    for index in top_indices:
+
+        event_name = side_effect_names[index]
+
+        event_name = event_name.replace(
+            "Target_Binary_",
+            ""
+        ).replace(
+            "_",
+            " "
+        )
+
+        probability = (
+            side_effect_probabilities[index]
+            * 100
+        )
+
+        top_side_effects.append({
+            "name": event_name,
+            "probability": round(
+                float(probability),
+                2
+            )
+        })
+
+
+    # ==================================================
+    # DEBUG
     # ==================================================
 
     print("\n==============================")
@@ -359,44 +372,7 @@ def predict(request):
     )
 
     print(
-        "SMILES A:",
-        smiles_a
-    )
-
-    print(
-        "SMILES B:",
-        smiles_b
-    )
-
-    print(
-        "Major:",
-        round(
-            major_probability,
-            2
-        ),
-        "%"
-    )
-
-    print(
-        "Minor:",
-        round(
-            minor_probability,
-            2
-        ),
-        "%"
-    )
-
-    print(
-        "Moderate:",
-        round(
-            moderate_probability,
-            2
-        ),
-        "%"
-    )
-
-    print(
-        "Predicted:",
+        "Risk Level:",
         risk_level
     )
 
@@ -409,59 +385,31 @@ def predict(request):
         "%"
     )
 
+    print(
+        "\nTop Adverse Events:"
+    )
+
+    for event in top_side_effects:
+
+        print(
+            "-",
+            event["name"],
+            ":",
+            event["probability"],
+            "%"
+        )
+
     print("==============================\n")
 
 
     # ==================================================
-    # SIDE EFFECT PREDICTION
+    # SAVE ADVERSE EVENTS
     # ==================================================
 
-    side_effect_probabilities = (
-        side_effect_model.predict_proba(
-            X_new
-        )
+    side_effect_text = ", ".join(
+        event["name"]
+        for event in top_side_effects
     )
-
-
-    effect_scores = []
-
-
-    for i, probabilities in enumerate(
-        side_effect_probabilities
-    ):
-
-        probability = float(
-            probabilities[0][1]
-        )
-
-        effect_scores.append(
-            (
-                str(
-                    side_effect_names[i]
-                ),
-                probability
-            )
-        )
-
-
-    # =========================
-    # SORT SIDE EFFECTS
-    # =========================
-
-    effect_scores.sort(
-        key=lambda x: x[1],
-        reverse=True
-    )
-
-
-    # =========================
-    # SELECT TOP 5
-    # =========================
-
-    top_side_effects = [
-        effect[0]
-        for effect in effect_scores[:5]
-    ]
 
 
     # ==================================================
@@ -479,9 +427,26 @@ def predict(request):
         major_probability=major_probability,
         minor_probability=minor_probability,
         moderate_probability=moderate_probability,
-        side_effects=", ".join(
-            top_side_effects
-        )
+        side_effects=side_effect_text
+    )
+
+
+    # ==================================================
+    # MOLECULAR IMAGE URLS
+    # ==================================================
+
+    molecule_image_a = (
+        "https://pubchem.ncbi.nlm.nih.gov/rest/pug/"
+        "compound/name/"
+        + quote(drug_a)
+        + "/PNG?image_size=300x300"
+    )
+
+    molecule_image_b = (
+        "https://pubchem.ncbi.nlm.nih.gov/rest/pug/"
+        "compound/name/"
+        + quote(drug_b)
+        + "/PNG?image_size=300x300"
     )
 
 
@@ -512,7 +477,6 @@ def predict(request):
             2
         ),
 
-        # Three severity probabilities
         "major_probability":
         round(
             major_probability,
@@ -531,18 +495,41 @@ def predict(request):
             2
         ),
 
-        # Top 5 associated adverse events
         "side_effects":
-        top_side_effects
+        top_side_effects,
+
+        "molecule_image_a":
+        molecule_image_a,
+
+        "molecule_image_b":
+        molecule_image_b
     }
 
-
-    # =========================
-    # SHOW RESULT
-    # =========================
 
     return render(
         request,
         "predictor/home.html",
         context
+    )
+
+
+# =========================
+# PREDICTION HISTORY
+# =========================
+
+@login_required
+def history(request):
+
+    predictions = PredictionHistory.objects.filter(
+        user=request.user
+    ).order_by(
+        "-created_at"
+    )
+
+    return render(
+        request,
+        "predictor/history.html",
+        {
+            "predictions": predictions
+        }
     )
