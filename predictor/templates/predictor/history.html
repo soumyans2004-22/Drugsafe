@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -20,14 +21,14 @@
             min-height: 100vh;
         }
 
-        /* HEADER */
         header {
-            height: 92px;
+            min-height: 92px;
             background: white;
             display: flex;
             align-items: center;
             justify-content: space-between;
-            padding: 0 6%;
+            padding: 18px 6%;
+            gap: 20px;
             box-shadow: 0 2px 12px rgba(0, 60, 120, 0.08);
         }
 
@@ -40,6 +41,7 @@
         .logo {
             width: 50px;
             height: 50px;
+            flex-shrink: 0;
             border-radius: 12px;
             background: linear-gradient(135deg, #0878d9, #35a7e8);
             color: white;
@@ -64,8 +66,9 @@
 
         .nav-links {
             display: flex;
-            gap: 32px;
+            gap: 28px;
             align-items: center;
+            flex-wrap: wrap;
         }
 
         .nav-links a {
@@ -84,7 +87,6 @@
             color: #e64b4b !important;
         }
 
-        /* MAIN */
         .container {
             width: 90%;
             max-width: 1250px;
@@ -93,7 +95,7 @@
 
         .page-title {
             text-align: center;
-            margin-bottom: 35px;
+            margin-bottom: 30px;
         }
 
         .page-title h2 {
@@ -105,14 +107,82 @@
         .page-title p {
             color: #7088a0;
             font-size: 17px;
+            line-height: 1.6;
         }
 
-        /* HISTORY CARD */
+        .message {
+            margin: 0 0 20px;
+            padding: 14px 18px;
+            border-radius: 9px;
+            background: #e1f6e9;
+            color: #207443;
+        }
+
+        .message.warning {
+            background: #fff0c7;
+            color: #8a5600;
+        }
+
         .history-card {
             background: white;
             border-radius: 20px;
             overflow: hidden;
             box-shadow: 0 12px 35px rgba(23, 74, 124, 0.10);
+        }
+
+        .history-actions {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 12px;
+            padding: 20px;
+            border-bottom: 1px solid #e7eef5;
+        }
+
+        .select-all-label {
+            display: flex;
+            align-items: center;
+            gap: 9px;
+            font-size: 14px;
+            font-weight: bold;
+            color: #385673;
+        }
+
+        input[type="checkbox"] {
+            width: 18px;
+            height: 18px;
+            accent-color: #0878d9;
+            cursor: pointer;
+        }
+
+        .action-buttons {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .button {
+            border: none;
+            padding: 12px 18px;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        .delete-selected {
+            background: #dc3545;
+            color: white;
+        }
+
+        .delete-all {
+            background: #7d2630;
+            color: white;
+        }
+
+        .button:hover {
+            opacity: 0.88;
         }
 
         .table-wrapper {
@@ -130,17 +200,18 @@
         }
 
         th {
-            padding: 20px 18px;
+            padding: 18px 16px;
             text-align: left;
-            font-size: 15px;
+            font-size: 14px;
             white-space: nowrap;
         }
 
         td {
-            padding: 20px 18px;
+            padding: 18px 16px;
             border-bottom: 1px solid #e7eef5;
             color: #385673;
-            font-size: 15px;
+            font-size: 14px;
+            vertical-align: top;
         }
 
         tbody tr:hover {
@@ -154,16 +225,15 @@
 
         .plus {
             color: #7c95ad;
-            margin: 0 6px;
+            margin: 0 5px;
         }
 
-        /* RISK */
         .risk {
             display: inline-block;
-            padding: 7px 16px;
+            padding: 7px 13px;
             border-radius: 20px;
             font-weight: bold;
-            font-size: 13px;
+            font-size: 12px;
         }
 
         .major {
@@ -184,10 +254,12 @@
         .confidence {
             font-weight: bold;
             color: #174a7c;
+            white-space: nowrap;
         }
 
         .effects {
             line-height: 1.6;
+            min-width: 180px;
         }
 
         .date {
@@ -201,9 +273,13 @@
             color: #718ba3;
         }
 
-        /* FOOTER */
+        .empty h3 {
+            margin-bottom: 12px;
+            color: #174a7c;
+        }
+
         footer {
-            background: #ffffff;
+            background: white;
             border-top: 1px solid #e2ebf3;
             text-align: center;
             padding: 25px;
@@ -211,19 +287,14 @@
             font-size: 14px;
         }
 
-        /* MOBILE */
         @media (max-width: 800px) {
-
             header {
-                height: auto;
-                padding: 18px 5%;
                 flex-direction: column;
                 gap: 18px;
             }
 
             .nav-links {
                 gap: 18px;
-                flex-wrap: wrap;
                 justify-content: center;
             }
 
@@ -236,9 +307,13 @@
                 font-size: 30px;
             }
 
-            th,
-            td {
-                padding: 15px 12px;
+            .history-actions {
+                align-items: flex-start;
+                flex-direction: column;
+            }
+
+            th, td {
+                padding: 14px 12px;
             }
         }
     </style>
@@ -247,168 +322,227 @@
 <body>
 
 <header>
-
     <div class="logo-area">
-
-        <div class="logo">
-            DS
-        </div>
+        <div class="logo">DS</div>
 
         <div class="brand">
             <h1>DrugSafe</h1>
             <p>Safer Medications. Smarter Insights.</p>
         </div>
-
     </div>
 
     <nav class="nav-links">
-
-        <a href="{% url 'predictor_home' %}">
-            Home
-        </a>
-
-        <a href="{% url 'history' %}" class="active">
-            History
-        </a>
-
-        <a href="{% url 'profile' %}">
-            Profile
-        </a>
-
-        <a href="{% url 'logout' %}" class="logout-link">
-            Logout
-        </a>
-
+        <a href="{% url 'predictor_home' %}">Home</a>
+        <a href="{% url 'history' %}" class="active">History</a>
+        <a href="{% url 'profile' %}">Profile</a>
+        <a href="{% url 'logout' %}" class="logout-link">Logout</a>
     </nav>
-
 </header>
-
 
 <main class="container">
 
     <div class="page-title">
-
         <h2>Prediction History</h2>
-
         <p>
-            View your previous drug interaction predictions and their results.
+            View and manage your previous drug interaction predictions.
         </p>
-
     </div>
 
+    {% if messages %}
+        {% for message in messages %}
+            <div class="message {% if 'warning' in message.tags %}warning{% endif %}">
+                {{ message }}
+            </div>
+        {% endfor %}
+    {% endif %}
 
     <div class="history-card">
 
         {% if predictions %}
 
-        <div class="table-wrapper">
+            <form
+                id="delete-selected-form"
+                method="post"
+                action="{% url 'delete_selected_history' %}"
+                onsubmit="return confirmSelectedDelete();"
+            >
+                {% csrf_token %}
 
-            <table>
+                <div class="history-actions">
 
-                <thead>
+                    <label class="select-all-label">
+                        <input
+                            type="checkbox"
+                            id="select-all"
+                            onchange="toggleAll(this)"
+                        >
+                        Select All
+                    </label>
 
-                    <tr>
-                        <th>Drug Pair</th>
-                        <th>Risk Level</th>
-                        <th>Confidence</th>
-                        <th>Associated Adverse Events</th>
-                        <th>Date & Time</th>
-                    </tr>
+                    <div class="action-buttons">
+                        <button
+                            type="submit"
+                            class="button delete-selected"
+                        >
+                            Delete Selected
+                        </button>
+                    </div>
+                </div>
 
-                </thead>
+                <div class="table-wrapper">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Select</th>
+                                <th>Drug Pair</th>
+                                <th>Risk Level</th>
+                                <th>Confidence</th>
+                                <th>Associated Adverse Events</th>
+                                <th>Date &amp; Time</th>
+                            </tr>
+                        </thead>
 
-                <tbody>
+                        <tbody>
+                            {% for prediction in predictions %}
+                                <tr>
+                                    <td>
+                                        <input
+                                            type="checkbox"
+                                            class="prediction-checkbox"
+                                            name="selected_ids"
+                                            value="{{ prediction.id }}"
+                                            aria-label="Select prediction {{ prediction.id }}"
+                                        >
+                                    </td>
 
-                    {% for prediction in predictions %}
+                                    <td>
+                                        <span class="drug-name">
+                                            {{ prediction.drug_a }}
+                                        </span>
 
-                    <tr>
+                                        <span class="plus">+</span>
 
-                        <td>
-                            <span class="drug-name">
-                                {{ prediction.drug_a }}
-                            </span>
+                                        <span class="drug-name">
+                                            {{ prediction.drug_b }}
+                                        </span>
+                                    </td>
 
-                            <span class="plus">+</span>
+                                    <td>
+                                        {% if prediction.risk_level == "Major" %}
+                                            <span class="risk major">Major</span>
+                                        {% elif prediction.risk_level == "Moderate" %}
+                                            <span class="risk moderate">Moderate</span>
+                                        {% else %}
+                                            <span class="risk minor">
+                                                {{ prediction.risk_level }}
+                                            </span>
+                                        {% endif %}
+                                    </td>
 
-                            <span class="drug-name">
-                                {{ prediction.drug_b }}
-                            </span>
-                        </td>
+                                    <td class="confidence">
+                                        {{ prediction.confidence|floatformat:2 }}%
+                                    </td>
 
+                                    <td class="effects">
+                                        {{ prediction.side_effects }}
+                                    </td>
 
-                        <td>
+                                    <td class="date">
+                                        {{ prediction.created_at|date:"d M Y, h:i A" }}
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </form>
 
-                            {% if prediction.risk_level == "Major" %}
+            <div class="history-actions">
+                <span class="select-all-label">
+                    Delete every prediction in your history
+                </span>
 
-                                <span class="risk major">
-                                    Major
-                                </span>
-
-                            {% elif prediction.risk_level == "Moderate" %}
-
-                                <span class="risk moderate">
-                                    Moderate
-                                </span>
-
-                            {% else %}
-
-                                <span class="risk minor">
-                                    Minor
-                                </span>
-
-                            {% endif %}
-
-                        </td>
-
-
-                        <td class="confidence">
-                            {{ prediction.confidence|floatformat:2 }}%
-                        </td>
-
-
-                        <td class="effects">
-                            {{ prediction.side_effects }}
-                        </td>
-
-
-                        <td class="date">
-                            {{ prediction.created_at|date:"d M Y, h:i A" }}
-                        </td>
-
-                    </tr>
-
-                    {% endfor %}
-
-                </tbody>
-
-            </table>
-
-        </div>
+                <form
+                    method="post"
+                    action="{% url 'delete_history' %}"
+                    onsubmit="return confirm('Permanently delete ALL your prediction history? This cannot be undone.');"
+                >
+                    {% csrf_token %}
+                    <button type="submit" class="button delete-all">
+                        Delete All History
+                    </button>
+                </form>
+            </div>
 
         {% else %}
 
-        <div class="empty">
-
-            <h3>No Prediction History</h3>
-
-            <p>
-                Your previous drug interaction predictions will appear here.
-            </p>
-
-        </div>
+            <div class="empty">
+                <h3>No Prediction History</h3>
+                <p>
+                    Your previous drug interaction predictions will appear here.
+                </p>
+            </div>
 
         {% endif %}
 
     </div>
-
 </main>
 
-
 <footer>
-
     DrugSafe © 2026 | AI-powered medicinal drug interaction analysis
-
 </footer>
+
+<script>
+    function toggleAll(masterCheckbox) {
+        const checkboxes = document.querySelectorAll(
+            ".prediction-checkbox"
+        );
+
+        checkboxes.forEach(function (checkbox) {
+            checkbox.checked = masterCheckbox.checked;
+        });
+    }
+
+    function confirmSelectedDelete() {
+        const selected = document.querySelectorAll(
+            ".prediction-checkbox:checked"
+        );
+
+        if (selected.length === 0) {
+            alert("Please select at least one prediction to delete.");
+            return false;
+        }
+
+        return confirm(
+            "Delete the " + selected.length +
+            " selected prediction(s)? This cannot be undone."
+        );
+    }
+
+    document.querySelectorAll(".prediction-checkbox").forEach(
+        function (checkbox) {
+            checkbox.addEventListener("change", function () {
+                const all = document.querySelectorAll(
+                    ".prediction-checkbox"
+                );
+
+                const checked = document.querySelectorAll(
+                    ".prediction-checkbox:checked"
+                );
+
+                const selectAll = document.getElementById("select-all");
+
+                if (selectAll) {
+                    selectAll.checked =
+                        all.length > 0 && checked.length === all.length;
+
+                    selectAll.indeterminate =
+                        checked.length > 0 && checked.length < all.length;
+                }
+            });
+        }
+    );
+</script>
 
 </body>
 </html>

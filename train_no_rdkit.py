@@ -54,8 +54,8 @@ print("Testing:", X_test.shape)
 
 # 6. Custom class weights
 class_weights = {
-    0: 1.5,   # Major
-    1: 2.0,   # Minor
+    0: 2.0,   # Major
+    1: 4.0,   # Minor
     2: 1.0    # Moderate
 }
 

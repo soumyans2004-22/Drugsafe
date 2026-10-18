@@ -1,16 +1,12 @@
+
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
-
     <meta charset="UTF-8">
-
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
-    <title>DrugSafe - Register</title>
+    <title>DrugSafe | Create Your Account</title>
 
     <style>
-
         * {
             box-sizing: border-box;
         }
@@ -18,229 +14,534 @@
         body {
             margin: 0;
             font-family: Arial, sans-serif;
-            background: #f4f7fb;
+            background: #f3f6fb;
+            color: #1e293b;
+        }
+
+        .header {
+            background: #123c69;
+            color: white;
+            padding: 17px 7%;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 3px 12px rgba(0, 0, 0, 0.15);
+        }
+
+        .brand {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-size: 26px;
+            font-weight: bold;
+        }
+
+        .brand-icon {
+            background: white;
+            color: #123c69;
+            width: 40px;
+            height: 40px;
+            border-radius: 10px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 27px;
+        }
+
+        .header-link {
+            color: white;
+            text-decoration: none;
+            border: 1px solid rgba(255, 255, 255, 0.7);
+            padding: 10px 19px;
+            border-radius: 7px;
+            font-size: 14px;
+        }
+
+        .header-link:hover {
+            background: white;
+            color: #123c69;
+        }
+
+        .page-heading {
+            text-align: center;
+            padding: 32px 15px 12px;
+        }
+
+        .page-heading h1 {
+            margin: 0 0 10px;
+            color: #123c69;
+            font-size: 29px;
+        }
+
+        .page-heading p {
+            color: #64748b;
+            margin: 0;
+            line-height: 1.6;
         }
 
         .container {
             width: 100%;
-            max-width: 500px;
-            margin: 40px auto;
-            padding: 20px;
+            max-width: 650px;
+            margin: 22px auto 45px;
+            padding: 0 18px;
         }
 
         .card {
             background: white;
-            padding: 35px;
-            border-radius: 12px;
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+            padding: 32px;
+            border-radius: 14px;
+            box-shadow: 0 5px 24px rgba(15, 40, 70, 0.09);
+            border: 1px solid #e4eaf2;
         }
 
-        .logo {
-            text-align: center;
-            color: #123c69;
-            font-size: 30px;
-            font-weight: bold;
-            margin-bottom: 10px;
+        .notice {
+            background: #eef5ff;
+            border-left: 4px solid #2563a6;
+            color: #24466b;
+            padding: 13px 15px;
+            border-radius: 5px;
+            font-size: 13px;
+            line-height: 1.6;
+            margin-bottom: 25px;
         }
 
         h2 {
-            text-align: center;
-            margin-bottom: 25px;
+            color: #123c69;
+            font-size: 19px;
+            margin: 26px 0 18px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid #e2e8f0;
+        }
+
+        h2:first-of-type {
+            margin-top: 0;
         }
 
         label {
             display: block;
             margin-bottom: 7px;
+            font-size: 14px;
             font-weight: bold;
+            color: #334155;
         }
 
         input,
         select {
             width: 100%;
-            padding: 12px;
+            padding: 12px 13px;
             margin-bottom: 18px;
-            border: 1px solid #ccc;
-            border-radius: 6px;
-            font-size: 15px;
+            border: 1px solid #cbd5e1;
+            border-radius: 7px;
+            font-size: 14px;
+            background: white;
         }
 
         input:focus,
         select:focus {
             outline: none;
-            border-color: #123c69;
+            border-color: #2563a6;
+            box-shadow: 0 0 0 3px rgba(37, 99, 166, 0.1);
         }
 
-        button {
-            width: 100%;
-            padding: 13px;
-            background: #123c69;
-            color: white;
+        input[type="file"] {
+            background: #f8fafc;
+        }
+
+        .password-wrapper {
+            position: relative;
+            margin-bottom: 18px;
+        }
+
+        .password-wrapper input {
+            margin-bottom: 0;
+            padding-right: 48px;
+        }
+
+        .eye-button {
+            position: absolute;
+            right: 9px;
+            top: 50%;
+            transform: translateY(-50%);
             border: none;
-            border-radius: 6px;
-            font-size: 16px;
+            background: transparent;
             cursor: pointer;
+            font-size: 20px;
+            padding: 5px;
+            line-height: 1;
         }
 
-        button:hover {
-            background: #0d3156;
+        .eye-button:focus-visible {
+            outline: 2px solid #2563a6;
+            border-radius: 5px;
+        }
+
+        .hint {
+            font-size: 12px;
+            color: #64748b;
+            margin-top: -10px;
+            margin-bottom: 18px;
+            line-height: 1.6;
         }
 
         .error {
-            background: #ffebee;
-            color: #c62828;
-            padding: 10px;
-            margin-bottom: 15px;
-            border-radius: 6px;
-            text-align: center;
+            background: #fff0f0;
+            color: #b91c1c;
+            padding: 13px;
+            border-radius: 7px;
+            margin-bottom: 18px;
+            font-size: 14px;
         }
 
-        .login-link {
-            text-align: center;
-            margin-top: 20px;
+        .submit-btn {
+            width: 100%;
+            background: #123c69;
+            color: white;
+            border: none;
+            padding: 14px;
+            font-size: 16px;
+            font-weight: bold;
+            border-radius: 7px;
+            cursor: pointer;
+            margin-top: 5px;
         }
 
-        .login-link a {
+        .submit-btn:hover {
+            background: #0d3156;
+        }
+
+        .login-text {
+            text-align: center;
+            margin-top: 23px;
+            font-size: 14px;
+            color: #64748b;
+        }
+
+        .login-text a {
             color: #123c69;
             text-decoration: none;
             font-weight: bold;
         }
 
-    </style>
+        .footer {
+            text-align: center;
+            color: #64748b;
+            font-size: 12px;
+            padding: 22px 15px;
+            border-top: 1px solid #e2e8f0;
+            background: white;
+            line-height: 1.8;
+        }
 
+        @media (max-width: 480px) {
+            .header {
+                padding: 14px 5%;
+            }
+
+            .brand {
+                font-size: 22px;
+            }
+
+            .header-link {
+                padding: 9px 12px;
+            }
+
+            .card {
+                padding: 22px 18px;
+            }
+
+            .page-heading h1 {
+                font-size: 25px;
+            }
+        }
+    </style>
 </head>
 
 <body>
 
-<div class="container">
+<header class="header">
+    <div class="brand">
+        <div class="brand-icon">+</div>
+        <span>DrugSafe</span>
+    </div>
 
+    <a href="{% url 'login' %}" class="header-link">Login</a>
+</header>
+
+<section class="page-heading">
+    <h1>Create Your Account</h1>
+    <p>Join DrugSafe for drug interaction support and information.</p>
+</section>
+
+<main class="container">
     <div class="card">
 
-        <div class="logo">
-            DrugSafe
+        <div class="notice">
+            <strong>Account verification</strong><br>
+            Please provide your professional details and supporting document.
+            An administrator must approve your credentials before you can
+            access the prediction system.
         </div>
 
-        <h2>Create Account</h2>
-
         {% if error %}
-
-            <div class="error">
-                {{ error }}
-            </div>
-
+            <div class="error">{{ error }}</div>
         {% endif %}
 
-        <form method="POST">
-
+        <form method="POST"
+              enctype="multipart/form-data"
+              id="registerForm">
             {% csrf_token %}
 
-            <label for="name">
-                Name
-            </label>
+            <h2>Personal Information</h2>
 
+            <label for="name">Full Name</label>
             <input
                 type="text"
                 id="name"
                 name="name"
-                placeholder="Enter your name"
+                placeholder="Enter your full name"
+                pattern="[A-Za-z][A-Za-z .'-]*"
+                title="Use letters, spaces, dots, hyphens or apostrophes"
+                oninput="this.value = this.value.replace(/[^A-Za-z .'-]/g, '')"
                 required
             >
 
-            <label for="gender">
-                Gender
-            </label>
-
-            <select
-                id="gender"
-                name="gender"
-                required
-            >
-
-                <option value="">
-                    Select Gender
-                </option>
-
-                <option value="Male">
-                    Male
-                </option>
-
-                <option value="Female">
-                    Female
-                </option>
-
-                <option value="Other">
-                    Other
-                </option>
-
+            <label for="gender">Gender</label>
+            <select id="gender" name="gender" required>
+                <option value="">Select Gender</option>
+                <option value="Male">Male</option>
+                <option value="Female">Female</option>
+                <option value="Other">Other</option>
             </select>
 
-            <label for="email">
-                Email
-            </label>
-
+            <label for="email">Email Address</label>
             <input
                 type="email"
                 id="email"
                 name="email"
-                placeholder="Enter your email"
+                placeholder="name@example.com"
+                autocomplete="email"
                 required
             >
 
-            <label for="phone">
-                Phone Number
-            </label>
-
+            <label for="phone">Phone Number</label>
             <input
                 type="tel"
                 id="phone"
                 name="phone"
-                placeholder="Enter phone number"
+                placeholder="Enter 10-digit phone number"
+                inputmode="numeric"
+                pattern="[0-9]{10}"
+                minlength="10"
+                maxlength="10"
+                title="Enter exactly 10 digits"
+                oninput="this.value = this.value.replace(/[^0-9]/g, '').slice(0, 10)"
                 required
             >
 
-            <label for="password">
-                Password
-            </label>
+            <h2>Professional Information</h2>
 
+            <label for="professional_role">Professional Role</label>
+            <select
+                id="professional_role"
+                name="professional_role"
+                required
+            >
+                <option value="">Select Role</option>
+                <option value="Doctor">Doctor</option>
+                <option value="Pharmacist">Pharmacist</option>
+                <option value="Medical Professional">Medical Professional</option>
+            </select>
+
+            <label for="registration_number">Registration Number</label>
             <input
-                type="password"
-                id="password"
-                name="password"
-                placeholder="Enter password"
+                type="text"
+                id="registration_number"
+                name="registration_number"
+                placeholder="Enter registration number"
+                maxlength="100"
                 required
             >
 
-            <label for="confirm_password">
-                Confirm Password
-            </label>
-
+            <label for="registration_proof">Supporting Document</label>
             <input
-                type="password"
-                id="confirm_password"
-                name="confirm_password"
-                placeholder="Confirm password"
+                type="file"
+                id="registration_proof"
+                name="registration_proof"
+                accept=".pdf,.jpg,.jpeg,.png"
                 required
             >
 
-            <button type="submit">
-                Register
+            <div class="hint">
+                Accepted formats: PDF, JPG, JPEG, PNG.<br>
+                Maximum file size: 5 MB.
+            </div>
+
+            <div id="fileError" class="error" role="alert" hidden></div>
+
+            <h2>Account Security</h2>
+
+            <label for="password">Password</label>
+            <div class="password-wrapper">
+                <input
+                    type="password"
+                    id="password"
+                    name="password"
+                    placeholder="Create a password"
+                    minlength="6"
+                    autocomplete="new-password"
+                    required
+                >
+                <button
+                    type="button"
+                    class="eye-button"
+                    onclick="togglePassword('password', this)"
+                    aria-label="Show password"
+                    aria-pressed="false"
+                    title="Show password"
+                >👁</button>
+            </div>
+
+            <label for="confirm_password">Confirm Password</label>
+            <div class="password-wrapper">
+                <input
+                    type="password"
+                    id="confirm_password"
+                    name="confirm_password"
+                    placeholder="Confirm your password"
+                    minlength="6"
+                    autocomplete="new-password"
+                    required
+                >
+                <button
+                    type="button"
+                    class="eye-button"
+                    onclick="togglePassword('confirm_password', this)"
+                    aria-label="Show confirm password"
+                    aria-pressed="false"
+                    title="Show password"
+                >👁</button>
+            </div>
+
+            <div id="passwordError" class="error" role="alert" hidden></div>
+
+            <button type="submit" class="submit-btn">
+                Create Account
             </button>
-
         </form>
 
-        <div class="login-link">
-
+        <div class="login-text">
             Already have an account?
-
-            <a href="{% url 'login' %}">
-                Login
-            </a>
-
+            <a href="{% url 'login' %}">Sign in</a>
         </div>
 
     </div>
+</main>
 
-</div>
+<footer class="footer">
+    DrugSafe &copy; 2026 | Drug Interaction Support System
+    <br>
+    For informational and decision-support purposes only.
+</footer>
+
+<script>
+    const form = document.getElementById("registerForm");
+    const proofInput = document.getElementById("registration_proof");
+    const fileError = document.getElementById("fileError");
+    const password = document.getElementById("password");
+    const confirmPassword = document.getElementById("confirm_password");
+    const passwordError = document.getElementById("passwordError");
+
+    const MAX_FILE_SIZE = 5 * 1024 * 1024;
+    const allowedExtensions = [".pdf", ".jpg", ".jpeg", ".png"];
+
+    function togglePassword(fieldId, button) {
+        const field = document.getElementById(fieldId);
+        const isHidden = field.type === "password";
+
+        field.type = isHidden ? "text" : "password";
+        button.textContent = isHidden ? "🙈" : "👁";
+        button.setAttribute("aria-pressed", String(isHidden));
+        button.setAttribute(
+            "aria-label",
+            isHidden ? "Hide password" : "Show password"
+        );
+        button.title = isHidden ? "Hide password" : "Show password";
+    }
+
+    function validateProof() {
+        fileError.hidden = true;
+        fileError.textContent = "";
+
+        const file = proofInput.files[0];
+
+        if (!file) {
+            fileError.textContent = "Please upload your supporting document.";
+            fileError.hidden = false;
+            return false;
+        }
+
+        const fileName = file.name.toLowerCase();
+        const validExtension = allowedExtensions.some(
+            extension => fileName.endsWith(extension)
+        );
+
+        if (!validExtension) {
+            fileError.textContent =
+                "Please upload a PDF, JPG, JPEG or PNG file.";
+            fileError.hidden = false;
+            proofInput.value = "";
+            return false;
+        }
+
+        if (file.size > MAX_FILE_SIZE) {
+            fileError.textContent =
+                "The file exceeds 5 MB. Please choose a smaller file.";
+            fileError.hidden = false;
+            proofInput.value = "";
+            return false;
+        }
+
+        return true;
+    }
+
+    proofInput.addEventListener("change", function() {
+        if (proofInput.files.length > 0) {
+            validateProof();
+        } else {
+            fileError.hidden = true;
+            fileError.textContent = "";
+        }
+    });
+
+    form.addEventListener("submit", function(event) {
+        fileError.hidden = true;
+        passwordError.hidden = true;
+        fileError.textContent = "";
+        passwordError.textContent = "";
+
+        if (password.value.length < 6) {
+            event.preventDefault();
+            passwordError.textContent =
+                "Password must contain at least 6 characters.";
+            passwordError.hidden = false;
+            password.focus();
+            return;
+        }
+
+        if (password.value !== confirmPassword.value) {
+            event.preventDefault();
+            passwordError.textContent = "Passwords do not match.";
+            passwordError.hidden = false;
+            confirmPassword.focus();
+            return;
+        }
+
+        if (!validateProof()) {
+            event.preventDefault();
+            proofInput.focus();
+        }
+    });
+</script>
 
 </body>
-
 </html>
