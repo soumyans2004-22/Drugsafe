@@ -24,3 +24,10 @@ new_dataset/extracted/
 new_dataset/*.zip
 new_dataset/*.csv
 new_dataset/*.npy
+
+# Protect uploaded registration documents
+media/
+
+# Ignore local model artifacts in new_dataset
+new_dataset/*.pkl
+new_dataset/*.json
